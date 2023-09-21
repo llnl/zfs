@@ -30,6 +30,11 @@ EXTRA_DIST = \
 SHELLCHECK_IGNORE = ,SC1117,SC2086,SC2295
 SHELLCHECKSCRIPTS = $(EXTRA_SCRIPTS)
 
+if CONFIG_USER
+dist_zfsexec_SCRIPTS = \
+	zfs_prepare_disk
+endif
+
 define EXTRA_ENVIRONMENT
 
 # Only required for in-tree use
