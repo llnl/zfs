@@ -36,6 +36,8 @@
 extern "C" {
 #endif
 
+extern uint64_t	zfetch_array_rd_sz;
+
 struct dnode;				/* so we can reference dnode */
 
 typedef struct zfetch {
