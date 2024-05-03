@@ -52,23 +52,18 @@ static unsigned int	zfetch_max_streams = 8;
 static unsigned int	zfetch_min_sec_reap = 1;
 /* max time before stream delete */
 static unsigned int	zfetch_max_sec_reap = 2;
-#ifdef _ILP32
-/* min bytes to prefetch per stream (default 2MB) */
-static unsigned int	zfetch_min_distance = 2 * 1024 * 1024;
-/* max bytes to prefetch per stream (default 8MB) */
-unsigned int	zfetch_max_distance = 8 * 1024 * 1024;
-#else
 /* min bytes to prefetch per stream (default 4MB) */
 static unsigned int	zfetch_min_distance = 4 * 1024 * 1024;
 /* max bytes to prefetch per stream (default 64MB) */
 unsigned int	zfetch_max_distance = 64 * 1024 * 1024;
-#endif
 /* max bytes to prefetch indirects for per stream (default 64MB) */
 unsigned int	zfetch_max_idistance = 64 * 1024 * 1024;
 /* max request reorder distance within a stream (default 16MB) */
 unsigned int	zfetch_max_reorder = 16 * 1024 * 1024;
 /* Max log2 fraction of holes in a stream */
 unsigned int	zfetch_hole_shift = 2;
+/* max number of bytes in an array_read in which we allow prefetching (1MB) */
+uint64_t	zfetch_array_rd_sz = 1024 * 1024;
 
 typedef struct zfetch_stats {
 	kstat_named_t zfetchstat_hits;
@@ -771,3 +766,6 @@ ZFS_MODULE_PARAM(zfs_prefetch, zfetch_, max_reorder, UINT, ZMOD_RW,
 
 ZFS_MODULE_PARAM(zfs_prefetch, zfetch_, hole_shift, UINT, ZMOD_RW,
 	"Max log2 fraction of holes in a stream");
+
+ZFS_MODULE_PARAM(zfs_prefetch, zfetch_, array_rd_sz, U64, ZMOD_RW,
+	"Number of bytes in a array_read");

@@ -547,6 +547,8 @@ A micro ZAP is upgraded to a fat ZAP, once it grows beyond the specified size.
 .It Sy zfetch_hole_shift Ns = Ns Sy 2 Pq uint
 Log2 fraction of holes in speculative prefetch stream allowed for it to
 proceed.
+.It Sy zfetch_array_rd_sz Ns = Ns Sy 1048576 Ns B Po 1 MiB Pc Pq u64
+If prefetching is enabled, disable prefetching for reads larger than this size.
 .
 .It Sy zfetch_min_distance Ns = Ns Sy 4194304 Ns B Po 4 MiB Pc Pq uint
 Min bytes to prefetch per stream.
