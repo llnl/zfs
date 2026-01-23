@@ -236,8 +236,8 @@ mmp_thread_start(spa_t *spa)
 		if (!mmp->mmp_thread) {
 			mmp->mmp_thread = thread_create(NULL, 0, mmp_thread,
 			    spa, 0, &p0, TS_RUN, defclsyspri);
-			zfs_dbgmsg("MMP thread started pool '%s' "
-			    "gethrtime %llu", spa_name(spa), gethrtime());
+			zfs_dbgmsg("mmp: mmp thread started spa=%s "
+			    "gethrtime=%llu", spa_name(spa), gethrtime());
 		}
 		mutex_exit(&mmp->mmp_thread_lock);
 	}
@@ -256,7 +256,7 @@ mmp_thread_stop(spa_t *spa)
 		cv_wait(&mmp->mmp_thread_cv, &mmp->mmp_thread_lock);
 	}
 	mutex_exit(&mmp->mmp_thread_lock);
-	zfs_dbgmsg("MMP thread stopped pool '%s' gethrtime %llu",
+	zfs_dbgmsg("mmp: mmp thread stopped spa=%s gethrtime=%llu",
 	    spa_name(spa), gethrtime());
 
 	ASSERT(mmp->mmp_thread == NULL);
@@ -448,9 +448,9 @@ mmp_write_uberblock(spa_t *spa)
 	spa_config_enter_mmp(spa, SCL_STATE, mmp_tag, RW_READER);
 	lock_acquire_time = gethrtime() - lock_acquire_time;
 	if (lock_acquire_time > (MSEC2NSEC(MMP_MIN_INTERVAL) / 10))
-		zfs_dbgmsg("MMP SCL_STATE acquisition pool '%s' took %llu ns "
-		    "gethrtime %llu", spa_name(spa), lock_acquire_time,
-		    gethrtime());
+		zfs_dbgmsg("mmp: long SCL_STATE acquisition, spa=%s "
+		    "acquire_time=%llu gethrtime=%llu", spa_name(spa),
+		    lock_acquire_time, gethrtime());
 
 	mutex_enter(&mmp->mmp_io_lock);
 
@@ -473,8 +473,8 @@ mmp_write_uberblock(spa_t *spa)
 			spa_mmp_history_add(spa, mmp->mmp_ub.ub_txg,
 			    gethrestime_sec(), mmp->mmp_delay, NULL, 0,
 			    mmp->mmp_kstat_id++, error);
-			zfs_dbgmsg("MMP error choosing leaf pool '%s' "
-			    "gethrtime %llu fail_mask %#x", spa_name(spa),
+			zfs_dbgmsg("mmp: error choosing leaf, spa=%s "
+			    "gethrtime=%llu fail_mask=%#x", spa_name(spa),
 			    gethrtime(), error);
 		}
 		mutex_exit(&mmp->mmp_io_lock);
@@ -484,11 +484,11 @@ mmp_write_uberblock(spa_t *spa)
 
 	vd = spa->spa_mmp.mmp_last_leaf;
 	if (mmp->mmp_skip_error != 0) {
-		mmp->mmp_skip_error = 0;
-		zfs_dbgmsg("MMP write after skipping due to unavailable "
-		    "leaves, pool '%s' gethrtime %llu leaf %llu",
+		zfs_dbgmsg("mmp: write after skipping due to unavailable "
+		    "leaves, spa=%s gethrtime=%llu vdev=%llu error=%d",
 		    spa_name(spa), (u_longlong_t)gethrtime(),
-		    (u_longlong_t)vd->vdev_guid);
+		    (u_longlong_t)vd->vdev_guid, mmp->mmp_skip_error);
+		mmp->mmp_skip_error = 0;
 	}
 
 	if (mmp->mmp_zio_root == NULL)
@@ -614,11 +614,11 @@ mmp_thread(void *arg)
 			next_time = gethrtime() + mmp_interval / leaves;
 
 		if (mmp_fail_ns != last_mmp_fail_ns) {
-			zfs_dbgmsg("MMP interval change pool '%s' "
-			    "gethrtime %llu last_mmp_interval %llu "
-			    "mmp_interval %llu last_mmp_fail_intervals %u "
-			    "mmp_fail_intervals %u mmp_fail_ns %llu "
-			    "skip_wait %d leaves %d next_time %llu",
+			zfs_dbgmsg("mmp: interval change, spa=%s "
+			    "gethrtime=%llu last_mmp_interval=%llu "
+			    "mmp_interval=%llu last_mmp_fail_intervals=%u "
+			    "mmp_fail_intervals=%u mmp_fail_ns=%llu "
+			    "skip_wait=%d leaves=%d next_time=%llu",
 			    spa_name(spa), (u_longlong_t)gethrtime(),
 			    (u_longlong_t)last_mmp_interval,
 			    (u_longlong_t)mmp_interval, last_mmp_fail_intervals,
@@ -633,9 +633,9 @@ mmp_thread(void *arg)
 		 */
 		if ((!last_spa_multihost && multihost) ||
 		    (last_spa_suspended && !suspended)) {
-			zfs_dbgmsg("MMP state change pool '%s': gethrtime %llu "
-			    "last_spa_multihost %u multihost %u "
-			    "last_spa_suspended %u suspended %u",
+			zfs_dbgmsg("mmp: state change spa=%s: gethrtime=%llu "
+			    "last_spa_multihost=%u multihost=%u "
+			    "last_spa_suspended=%u suspended=%u",
 			    spa_name(spa), (u_longlong_t)gethrtime(),
 			    last_spa_multihost, multihost, last_spa_suspended,
 			    suspended);
@@ -661,9 +661,10 @@ mmp_thread(void *arg)
 		 */
 		if (multihost && !suspended && mmp_fail_intervals &&
 		    (gethrtime() - mmp->mmp_last_write) > mmp_fail_ns) {
-			zfs_dbgmsg("MMP suspending pool '%s': gethrtime %llu "
-			    "mmp_last_write %llu mmp_interval %llu "
-			    "mmp_fail_intervals %llu mmp_fail_ns %llu txg %llu",
+			zfs_dbgmsg("mmp: suspending pool, spa=%s "
+			    "gethrtime=%llu mmp_last_write=%llu "
+			    "mmp_interval=%llu mmp_fail_intervals=%llu "
+			    "mmp_fail_ns=%llu txg=%llu",
 			    spa_name(spa), (u_longlong_t)gethrtime(),
 			    (u_longlong_t)mmp->mmp_last_write,
 			    (u_longlong_t)mmp_interval,
