@@ -1614,7 +1614,7 @@ vdev_uberblock_load(vdev_t *rvd, uberblock_t *ub, nvlist_t **config)
 	 */
 	if (cb.ubl_vd != NULL) {
 		vdev_dbgmsg(cb.ubl_vd, "best uberblock found for spa %s. "
-		    "txg %llu", spa->spa_name, (u_longlong_t)ub->ub_txg);
+		    "txg %llu", spa_load_name(spa), (u_longlong_t)ub->ub_txg);
 
 		*config = vdev_label_read_config(cb.ubl_vd, ub->ub_txg);
 		if (*config == NULL && spa->spa_extreme_rewind) {
