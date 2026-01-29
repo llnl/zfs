@@ -5423,6 +5423,8 @@ spa_load_impl(spa_t *spa, spa_import_type_t type, const char **ereport)
 
 		ASSERT(spa->spa_load_state != SPA_LOAD_TRYIMPORT);
 
+		cmn_err(CE_NOTE, "ZFS pool '%s' imported read/write", spa_name(spa));
+
 		/*
 		 * In case of a checkpoint rewind, log the original txg
 		 * of the checkpointed uberblock.
