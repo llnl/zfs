@@ -1597,7 +1597,7 @@ spa_activate(spa_t *spa, spa_mode_t mode)
 	(void) spa_create_process;
 #ifdef HAVE_SPA_THREAD
 	/* Only create a process if we're going to be around a while. */
-	if (spa_create_process && strcmp(spa->spa_name, TRYIMPORT_NAME) != 0) {
+	if (spa_create_process && strncmp(spa->spa_name, TRYIMPORT_NAME, strlen(TRYIMPORT_NAME)) != 0) {
 		if (newproc(spa_thread, (caddr_t)spa, syscid, maxclsyspri,
 		    NULL, 0) == 0) {
 			spa->spa_proc_state = SPA_PROC_CREATED;
@@ -6776,9 +6776,14 @@ spa_tryimport(nvlist_t *tryconfig)
 	/*
 	 * Create and initialize the spa structure.
 	 */
+	char *name = kmem_alloc(MAXPATHLEN, KM_SLEEP);
+	(void) snprintf(name, MAXPATHLEN, "%s-%llx-%s",
+	    TRYIMPORT_NAME, (u_longlong_t)curthread, poolname);
+
 	mutex_enter(&spa_namespace_lock);
-	spa = spa_add(TRYIMPORT_NAME, tryconfig, NULL);
+	spa = spa_add(name, tryconfig, NULL);
 	spa_activate(spa, SPA_MODE_READ);
+	kmem_free(name, MAXPATHLEN);
 
 	/*
 	 * Rewind pool if a max txg was provided.
@@ -6837,7 +6842,7 @@ spa_tryimport(nvlist_t *tryconfig)
 
 			/*
 			 * We have to play games with the name since the
-			 * pool was opened as TRYIMPORT_NAME.
+			 * pool was opened as TRYIMPORT_NAME-%llx-REAL_NAME.
 			 */
 			if (dsl_dsobj_to_dsname(spa_name(spa),
 			    spa->spa_bootfs, tmpname) == 0) {
